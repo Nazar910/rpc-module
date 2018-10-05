@@ -1,11 +1,11 @@
 const amqp = require('amqplib');
 const assert = require('assert');
 const EventEmitter = require('events');
+const _ = require('lodash');
 class AMQPDriver {
-    constructor(data) {
-        super();
-        const { amqpUri } = data;
-        assert(amqpUri, 'amqpUri is required!');
+    constructor(amqpUri) {
+        assert.ok(amqpUri, 'amqpUri is required!');
+        assert.ok(_.isString(amqpUri), 'amqpUri should be string');
         this._amqpUri = amqpUri;
         this.emitter = new EventEmitter();
     }
@@ -26,24 +26,40 @@ class AMQPDriver {
         let conn = this.connection;
         while (!conn) {
             try {
+                console.log('About to init connection');
                 conn = await amqp.connect(this._amqpUri);
                 this._connection = conn;
             } catch (_) {
+                console.error('Failed to connect to amqp');
                 await new Promise(resolve => setTimeout(resolve, AMQPDriver.RECONNECT_TIMEOUT));
+                console.error('Attempring to reconnect');
             }
         }
         return conn;
     }
 
-    async start() {
+    async _initChannel() {
+        if (this.channel) {
+            return;
+        }
+        console.log('About to create channel');
         const conn = await this._getConnection();
-        this._channel = await conn.createChannel();
+        const ch = await conn.createChannel();
+        this._channel = ch;
+    }
+
+    async start() {
+        await this._initChannel();
+    }
+
+    static create(...args) {
+        return new this(...args);
     }
 }
 
 class AMQPRPCClient extends AMQPDriver {
-    constructor(data) {
-        super(data);
+    constructor(...args) {
+        super(...args);
         this._correlationIds = new Set();
     }
     get correlationIds() {
@@ -64,10 +80,11 @@ class AMQPRPCClient extends AMQPDriver {
         return new Promise(resolve => {
             this.emitter.on(`reply-${correlationId}`, resolve);
             ch.consume(replyTo, this._onMessage.bind(this));
-        })
+        });
     }
     async call(command, args) {
         const ch = this.channel;
+        assert.ok(ch, 'No channel, you should call start() before');
         const replyTo = `reply-${command}`;
         const replyOpts = {
             messageTtl: AMQPRPCClient.REPLY_MESSAGE_TTL
@@ -101,4 +118,9 @@ class AMQPRPCServer extends AMQPDriver {
             });
         });
     }
+}
+
+module.exports = {
+    AMQPRPCClient,
+    AMQPRPCServer
 }

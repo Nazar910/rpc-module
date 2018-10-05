@@ -1,4 +1,5 @@
 const AMQPDrivers = require('./amqp');
+const assert = require('assert');
 const drivers = new Map();
 drivers.set('amqp', AMQPDrivers);
 
