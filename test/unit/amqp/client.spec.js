@@ -6,7 +6,6 @@ const sinon = require('sinon');
 const rpcModule = require('../../../src');
 const { AMQPRPCClient } = rpcModule.getDriver('amqp');
 const Command = require('../../../src/command');
-const CommandResult = require('../../../src/command-result');
 describe('AMQP - (RabbitMQ)', () => {
     const RABBITMQ_URI = 'amqp://localhost:5672';
     let sandbox;
