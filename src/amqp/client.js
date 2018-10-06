@@ -30,7 +30,7 @@ class AMQPRPCClient extends AMQPDriver {
             correlationIds.delete(msgId);
             this.emitter.emit(
                 `reply-${msgId}`,
-                CommandResult.fromBuffer(msg.content)
+                CommandResult.fromBuffer(msg.content).data
             );
             return;
         }
@@ -52,10 +52,10 @@ class AMQPRPCClient extends AMQPDriver {
     /**
      * Send command via AMQP
      * @param {String} command - command to be sent
-     * @param {Array} args - arguments
+     * @param {any} args - arguments
      * @returns {any} result
      */
-    async call(command, args = []) {
+    async call(command, ...args) {
         assert.ok(command, 'Command is required');
         const ch = this.channel;
         assert.ok(
@@ -71,7 +71,7 @@ class AMQPRPCClient extends AMQPDriver {
         this.correlationIds.add(correlationId);
         const promise = this._waitForReply(replyTo, correlationId);
         const cmd = Command.create(command, args);
-        ch.sendToQueue(replyTo, cmd.pack(), {
+        ch.sendToQueue(command, cmd.pack(), {
             correlationId,
             replyTo
         });

@@ -21,7 +21,14 @@ class AMQPRPCServer extends AMQPDriver {
         ch.consume(command, async (msg) => {
             const { replyTo, correlationId } = msg.properties;
             const cmd = Command.fromBuffer(msg.content);
-            const result = await job(...cmd.args);
+            let result;
+            try {
+                result = await job(...cmd.args);
+                ch.ack(msg);
+            } catch (e) {
+                console.error(e.message);
+                ch.reject(msg, false);
+            }
             const replyCmd = CommandResult.create(result);
             ch.sendToQueue(replyTo, replyCmd.pack(), {
                 correlationId

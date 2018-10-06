@@ -73,8 +73,10 @@ describe('AMQP - (RabbitMQ)', () => {
                 });
                 it('should emit reply-corr_id event with command obj',
                 () => new Promise(resolve => {
-                        amqpRpc.emitter.on('reply-1234', (cmdRes) => {
-                            expect(cmdRes).to.eql(CommandResult.create({ foo: 'bar' }));
+                        amqpRpc.emitter.on('reply-1234', (result) => {
+                            expect(result).to.eql({
+                                foo: 'bar'
+                            });
                             resolve();
                         })
                         amqpRpc._onMessage(msg);
@@ -173,7 +175,7 @@ describe('AMQP - (RabbitMQ)', () => {
             await amqpRpc.call('command');
             expect(sendToQueueSpy.callCount).to.be.equal(1);
             expect(sendToQueueSpy.firstCall.args).to.have.lengthOf(3);
-            expect(sendToQueueSpy.firstCall.args[0]).to.be.equal('reply-command');
+            expect(sendToQueueSpy.firstCall.args[0]).to.be.equal('command');
             expect(sendToQueueSpy.firstCall.args[1])
                 .to.eql(Command.create('command', []).pack());
             expect(sendToQueueSpy.firstCall.args[2].replyTo).to.be.equal('reply-command');
