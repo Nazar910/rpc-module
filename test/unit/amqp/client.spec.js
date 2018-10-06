@@ -5,7 +5,8 @@ const { expect } = chai;
 const sinon = require('sinon');
 const rpcModule = require('../../../src');
 const { AMQPRPCClient } = rpcModule.getDriver('amqp');
-const CommadResult = require('../../../src/command-result');
+const Command = require('../../../src/command');
+const CommandResult = require('../../../src/command-result');
 describe('AMQP - (RabbitMQ)', () => {
     const RABBITMQ_URI = 'amqp://localhost:5672';
     let sandbox;
@@ -73,7 +74,7 @@ describe('AMQP - (RabbitMQ)', () => {
                 it('should emit reply-corr_id event with command obj',
                 () => new Promise(resolve => {
                         amqpRpc.emitter.on('reply-1234', (cmdRes) => {
-                            expect(cmdRes).to.eql(CommadResult.create({ foo: 'bar' }));
+                            expect(cmdRes).to.eql(CommandResult.create({ foo: 'bar' }));
                             resolve();
                         })
                         amqpRpc._onMessage(msg);
@@ -111,6 +112,76 @@ describe('AMQP - (RabbitMQ)', () => {
         });
     });
     describe('call', () => {
-        it('should save correlation id');
+        let amqpRpc;
+        describe('no channel', () => {
+            beforeEach(() => {
+                amqpRpc = AMQPRPCClient.create(RABBITMQ_URI);
+            });
+            it('should reject', () => expect(
+                    amqpRpc.call('command')
+                ).to.be.rejectedWith(Error, 'No channel, you should call start() before')
+            );
+        });
+        let assertQueueStub;
+        let correlationIdsSet;
+        let waitForReplyStub;
+        let sendToQueueSpy;
+        beforeEach(() => {
+            assertQueueStub = sandbox.stub().resolves();
+            sendToQueueSpy = sandbox.spy();
+            const channelObj = {
+                assertQueue: assertQueueStub,
+                sendToQueue: sendToQueueSpy
+            }
+            amqpRpc = AMQPRPCClient.create(RABBITMQ_URI);
+            sandbox.stub(amqpRpc, 'channel')
+            .get(() => channelObj);
+            waitForReplyStub = sandbox.stub(amqpRpc, '_waitForReply')
+                .resolves({});
+            correlationIdsSet = new Set();
+            sandbox.stub(amqpRpc, 'correlationIds')
+                .get(() => correlationIdsSet);
+        });
+        it('should assert queue', async () => {
+            await amqpRpc.call('command');
+            expect(assertQueueStub.callCount).to.be.equal(1);
+            expect(assertQueueStub.firstCall.args).to.eql([
+                'reply-command',
+                {
+                    messageTtl: 20 * 1000
+                }
+            ]);
+        });
+        it('should save correlation id', async () => {
+            await amqpRpc.call('command');
+            expect(correlationIdsSet.size).to.be.equal(1);
+        });
+        it('should call _waitForReply', async () => {
+            await amqpRpc.call('command');
+            expect(waitForReplyStub.callCount).to.be.equal(1);
+            expect(waitForReplyStub.firstCall.args).to.have.lengthOf(2);
+            expect(waitForReplyStub.firstCall.args[0]).to.be.equal('reply-command');
+        });
+        describe('_waitForReply rejects', () => {
+            it('should reject', () => {
+                amqpRpc = AMQPRPCClient.create(RABBITMQ_URI);
+                waitForReplyStub = sandbox.stub(amqpRpc, '_waitForReply').rejects();
+                expect(amqpRpc.call('command')).to.be.rejected;
+            });
+        });
+        it('should call sendToQueue', async () => {
+            await amqpRpc.call('command');
+            expect(sendToQueueSpy.callCount).to.be.equal(1);
+            expect(sendToQueueSpy.firstCall.args).to.have.lengthOf(3);
+            expect(sendToQueueSpy.firstCall.args[0]).to.be.equal('reply-command');
+            expect(sendToQueueSpy.firstCall.args[1])
+                .to.eql(Command.create('command', []).pack());
+            expect(sendToQueueSpy.firstCall.args[2].replyTo).to.be.equal('reply-command');
+        });
+        describe('no command specified', () => {
+            it('should reject', () => expect(
+                amqpRpc.call()).to.be.rejectedWith(Error, 'Command is required')
+            );
+        });
     });
 });

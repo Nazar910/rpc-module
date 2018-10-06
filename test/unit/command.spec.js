@@ -44,4 +44,16 @@ describe('Command', () => {
             expect(cmd.args).to.eql([1, 2]);
         });
     });
+    describe('pack', () => {
+        it('should pack Command into buffer', () => {
+            const cmd = Command.create('command', ['foo']);
+            const buff = cmd.pack();
+
+            const expectedBuff = Buffer.from(JSON.stringify({
+                command: 'command',
+                args: ['foo']
+            }));
+            expect(buff).to.be.eql(expectedBuff);
+        });
+    });
 });

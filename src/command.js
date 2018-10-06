@@ -33,6 +33,15 @@ class Command {
         const { command, args } = JSON.parse(buffer.toString());
         return Command.create(command, args);
     }
+
+    /**
+     * Convert command data to json and return binary
+     * representation
+     */
+    pack() {
+        const { args, command } = this;
+        return Buffer.from(JSON.stringify({command, args}));
+    }
 }
 
 module.exports = Command;
