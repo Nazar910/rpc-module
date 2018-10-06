@@ -1,13 +1,11 @@
 const amqp = require('amqplib');
 const assert = require('assert');
-const EventEmitter = require('events');
 const _ = require('lodash');
 class AMQPDriver {
     constructor(amqpUri) {
         assert.ok(amqpUri, 'amqpUri is required!');
         assert.ok(_.isString(amqpUri), 'amqpUri should be string');
         this._amqpUri = amqpUri;
-        this.emitter = new EventEmitter();
     }
 
     get connection() {

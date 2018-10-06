@@ -5,6 +5,11 @@ const Command = require('../command');
 const CommandResult = require('../command-result');
 
 class AMQPRPCServer extends AMQPDriver {
+    /**
+     * Add command with handler
+     * @param {String} command - command name
+     * @param {Function|AsyncFunction} job - job to be executed on command
+     */
     async addHandler(command, job) {
         assert.ok(command, 'Command is required');
         assert.ok(_.isString(command), 'Command should be string');

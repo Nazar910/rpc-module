@@ -1,3 +1,4 @@
 ./test/unit/**/**.spec.js
+./test/unit/**.spec.js
 --recursive
 --exit

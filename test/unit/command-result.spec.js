@@ -20,13 +20,18 @@ describe('Command', () => {
             const buff = cmdRes.pack();
 
             const expectedBuff = Buffer.from(JSON.stringify({
-                data: {
-                    foo: 'bar'
-                }
+                foo: 'bar'
             }));
             expect(buff).to.be.eql(expectedBuff);
             const buffRes = JSON.parse(buff.toString());
-            expect(buffRes.data).to.eql({foo: 'bar'});
+            expect(buffRes).to.eql({foo: 'bar'});
+        });
+    });
+    describe('fromBuffer', () => {
+        it('should parse binary and create new command-result', () => {
+            const buffer = Buffer.from(JSON.stringify({foo:'bar'}));
+            const cmdRes = CommandResult.fromBuffer(buffer);
+            expect(cmdRes.data).to.eql({foo: 'bar'});
         });
     });
 });

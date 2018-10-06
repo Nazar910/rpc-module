@@ -20,12 +20,20 @@ class CommandResult {
     }
 
     /**
+     * Parse binary data and create CommandResult instance
+     * @param {Buffer} buffer - binary data
+     * @returns {CommandResult} cmdRes
+     */
+    static fromBuffer(buffer) {
+        const data = JSON.parse(buffer.toString());
+        return CommandResult.create(data);
+    }
+
+    /**
      * Converts CommandResult into Buffer
      */
     pack() {
-        return Buffer.from(JSON.stringify({
-            data: this.data
-        }));
+        return Buffer.from(JSON.stringify(this.data));
     }
 }
 
