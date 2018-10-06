@@ -1,8 +1,8 @@
 {
-  "name": "rpc-module",
+  "name": "@nazar910/rpc-module",
   "version": "0.0.1",
   "description": "Module that provides rpc communication",
-  "main": "index.js",
+  "main": "rpc-module",
   "bugs": "https://github.com/Nazar910/rpc-module/issues",
   "repository": {
     "type": "git",
@@ -13,9 +13,9 @@
     "test:integration": "mocha  --opts ./test/integration/mocha.opts",
     "test": "npm run test:unit && npm run test:integration"
   },
-  "keywords": ["rpc", "rpc-module"],
-  "author": "Nazarii Pyvovar <Nazar910>",
-  "license": "ISC",
+  "keywords": ["rpc", "amqp-rpc"],
+  "author": "Nazarii Pyvovar (https://github.com/Nazar910)",
+  "license": "MIT",
   "devDependencies": {
     "amqplib": "^0.5.2",
     "chai": "^4.2.0",
