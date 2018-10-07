@@ -1,4 +1,4 @@
-# rpc-module
+# rpc-module [![Build Status](https://travis-ci.com/Nazar910/rpc-module.svg?branch=master)](https://travis-ci.com/Nazar910/rpc-module)
 *Module that provide you with a possibility to communicate with other modules of your system via rpc*
 
 ## Getting started
