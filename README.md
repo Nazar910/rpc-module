@@ -30,7 +30,6 @@ async function main() {
     server.addHandler('important', (job) => `"${job}" is very important`);
 
     const client = AMQPRPCClient.create(RABBITMQ_URI);
-    await client.start();
     const result = await client.call('important', 'doing something');
     console.log(result);
 }
