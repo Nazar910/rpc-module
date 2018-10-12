@@ -56,12 +56,9 @@ class AMQPRPCClient extends AMQPDriver {
      * @returns {any} result
      */
     async call(command, ...args) {
+        await super.start();
         assert.ok(command, 'Command is required');
         const ch = this.channel;
-        assert.ok(
-            ch,
-            'No channel, you should call start() before'
-        );
         const replyTo = `reply-${command}`;
         const replyOpts = {
             messageTtl: AMQPRPCClient.REPLY_MESSAGE_TTL
@@ -75,7 +72,11 @@ class AMQPRPCClient extends AMQPDriver {
             correlationId,
             replyTo
         });
-        return promise;
+        const result = await promise;
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        return result;
     }
 
     static get REPLY_MESSAGE_TTL() {

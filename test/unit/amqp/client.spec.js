@@ -114,15 +114,6 @@ describe('AMQP - (RabbitMQ)', () => {
     });
     describe('call', () => {
         let amqpRpc;
-        describe('no channel', () => {
-            beforeEach(() => {
-                amqpRpc = AMQPRPCClient.create(RABBITMQ_URI);
-            });
-            it('should reject', () => expect(
-                    amqpRpc.call('command')
-                ).to.be.rejectedWith(Error, 'No channel, you should call start() before')
-            );
-        });
         let assertQueueStub;
         let correlationIdsSet;
         let waitForReplyStub;

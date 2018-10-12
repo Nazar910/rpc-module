@@ -27,6 +27,7 @@ class AMQPRPCServer extends AMQPDriver {
                 ch.ack(msg);
             } catch (e) {
                 console.error(e.message);
+                result = { error: e.message };
                 ch.reject(msg, false);
             }
             const replyCmd = CommandResult.create(result);
