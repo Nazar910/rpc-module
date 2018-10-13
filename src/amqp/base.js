@@ -30,7 +30,7 @@ class AMQPDriver {
             } catch (_) {
                 console.error('Failed to connect to amqp');
                 await new Promise(resolve => setTimeout(resolve, AMQPDriver.RECONNECT_TIMEOUT));
-                console.error('Attempring to reconnect');
+                console.error('Attempting to reconnect');
             }
         }
         return conn;
