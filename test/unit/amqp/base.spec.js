@@ -138,6 +138,91 @@ describe('AMQP - (RabbitMQ)', () => {
                     expect(initChannelStub.firstCall.args).to.have.lengthOf(0);
                 });
             });
+            describe('_closeChannel', () => {
+                let amqpRpc;
+                let channelCloseStub;
+                beforeEach(() => {
+                    amqpRpc = driverImpl.create(RABBITMQ_URI);
+                    channelCloseStub = sandbox.stub().resolves();
+                    sandbox.stub(amqpRpc, 'channel')
+                        .get(() => ({
+                            close: channelCloseStub
+                        }));
+                });
+                it('should call channel close', async () => {
+                    await amqpRpc._closeChannel();
+                    expect(channelCloseStub.callCount).to.be.equal(1);
+                    expect(channelCloseStub.firstCall.args).to.have.lengthOf(0);
+                })
+                describe('no channel present', () => {
+                    beforeEach(() => {
+                        amqpRpc = driverImpl.create(RABBITMQ_URI);
+                    });
+                    it('should just pass', async () => {
+                        await amqpRpc._closeChannel();
+                    });
+                });
+                describe('channel.close rejects', () => {
+                    beforeEach(() => {
+                        amqpRpc = driverImpl.create(RABBITMQ_URI);
+                        channelCloseStub = sandbox.stub().rejects(new Error('Error from channel.close'));
+                        sandbox.stub(amqpRpc, 'channel')
+                            .get(() => ({
+                                close: channelCloseStub
+                            }));
+                    });
+                    it('should reject', () =>
+                        expect(
+                            amqpRpc._closeChannel()
+                        ).to.be.rejectedWith(Error, 'Error from channel.close')
+                    );
+                });
+            });
+            describe('_closeConnection', () => {
+                let amqpRpc;
+                let connectionCloseStub;
+                beforeEach(() => {
+                    amqpRpc = driverImpl.create(RABBITMQ_URI);
+                    connectionCloseStub = sandbox.stub().resolves();
+                    sandbox.stub(amqpRpc, 'connection')
+                        .get(() => ({
+                            close: connectionCloseStub
+                        }));
+                });
+                it('should call connection.close', async () => {
+                    await amqpRpc._closeConnection();
+                    expect(connectionCloseStub.callCount).to.be.equal(1);
+                    expect(connectionCloseStub.firstCall.args).to.have.lengthOf(0);
+                });
+                describe('no connection object', () => {
+                    beforeEach(() => {
+                        amqpRpc = driverImpl.create(RABBITMQ_URI);
+                    });
+                    it('should just pass', () => amqpRpc._closeConnection());
+                });
+            });
+            describe('close', () => {
+                let amqpRpc;
+                let closeChannelStub;
+                let closeConnectionStub;
+                beforeEach(() => {
+                    amqpRpc = driverImpl.create(RABBITMQ_URI);
+                    closeChannelStub = sandbox.stub(amqpRpc, '_closeChannel')
+                        .resolves();
+                    closeConnectionStub = sandbox.stub(amqpRpc, '_closeConnection')
+                        .resolves();
+                });
+                it('should call _closeChannel', async () => {
+                    await amqpRpc.close();
+                    expect(closeChannelStub.callCount).to.be.equal(1);
+                    expect(closeChannelStub.firstCall.args).to.have.lengthOf(0);
+                });
+                it('should call _closeChannel', async () => {
+                    await amqpRpc.close();
+                    expect(closeConnectionStub.callCount).to.be.equal(1);
+                    expect(closeConnectionStub.firstCall.args).to.have.lengthOf(0);
+                });
+            });
         });
 
     }
