@@ -6,8 +6,10 @@ const rpcModule = require('../../src');
 const { AMQPRPCServer, AMQPRPCClient  } = rpcModule.getDriver('amqp');
 const RABBITMQ_URI = 'amqp://localhost:5672';
 describe('AMQP rpc', () => {
+    let rpcClient;
+    let rpcServer;
     beforeEach(async () => {
-        const rpcServer = AMQPRPCServer.create(RABBITMQ_URI);
+        rpcServer = AMQPRPCServer.create(RABBITMQ_URI);
         await rpcServer.start();
 
         rpcServer.addHandler('foo', (key) => {
@@ -16,8 +18,12 @@ describe('AMQP rpc', () => {
             }
         });
     });
+    afterEach(async () => {
+        await rpcClient.close();
+        await rpcServer.close();
+    });
     it('should send rpc and get response', async () => {
-        const rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
+        rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
         await rpcClient.start();
         const actual = await rpcClient.call('foo', 'bar');
         expect(actual).to.eql({
@@ -26,9 +32,8 @@ describe('AMQP rpc', () => {
     });
 
     describe('job throwed error', () => {
-        let rpcClient;
         beforeEach(async () => {
-            const rpcServer = AMQPRPCServer.create(RABBITMQ_URI);
+            rpcServer = AMQPRPCServer.create(RABBITMQ_URI);
             await rpcServer.start();
 
             rpcServer.addHandler('job-with-error', () => {

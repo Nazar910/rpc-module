@@ -45,3 +45,69 @@ About to create channel
 About to init connection
 "doing something" is very important
 ```
+
+### API
+1. rpcModule.getDriver(driverName: string)
+Returns apropriate drivers (Server and Client) for specified driverName.
+```javascript
+const rpcModule = require('nazar@910/rpc-module');
+const { AMQPRPCServer, AMQPRPCClient } = rpcModule.getDriver('amqp');
+```
+2. Drivers API
+
+!Note: all driver have similar API for easy usage.
+
+- `create(driverArgs)`
+
+AMQPRPCServer and AMQPRPCClient have `create` factory method for getting instance of driver (`rpcServer` or `rpcClient`).
+Example:
+```javascript
+const rpcModule = require('nazar@910/rpc-module');
+const { AMQPRPCServer, AMQPRPCClient } = rpcModule.getDriver('amqp');
+const RABBITMQ_URI = 'amqp://localhost:5672';
+const rpcServer = AMQPRPCServer.create(RABBITMQ_URI);
+const rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
+```
+
+- `start()`
+
+`rpcServer` and `rpcClient` have `start` method for ensuring connection. Required for server to start listening before registering handlers.
+Example:
+```javascript
+// ...
+async function () {
+    await rpcServer.start();
+    await rpcClient.start();
+}
+// ...
+```
+- `rpcServer.addHandler(command: string, job: Function)`
+
+`rpcServer` has `addHandler` method for registering handlers.
+Command is the name of rpc `procedure` and handler should be a function that returns Promise (or async function) and result will be sent to client.
+!!!Note: it is important to call `rpcServer.start()` before registering handlers.
+Example:
+```javascript
+// ...
+async function handler(...args) {
+    console.log('Args are', args);
+    return args;
+}
+async function () {
+    await rpcServer.addHandler('foo', handler);
+}
+// ...
+```
+- `rpcClient.call`
+
+`rpcClient` has `call(command: string, arg1, arg2, ..., argn)` method for calling rpc.
+Command is the name of rpc `procedure` and args are arguments to be passed to rpc.
+Example:
+```javascript
+// ...
+async function () {
+    const result = await rpcClient.call('foo', 'bar');
+    console.log('Result is', result);
+}
+// ...
+```
