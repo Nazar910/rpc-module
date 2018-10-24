@@ -74,7 +74,10 @@ class AMQPRPCClient extends AMQPDriver {
         });
         const result = await promise;
         if (result.error) {
-            throw new Error(result.error);
+            const rpcError = JSON.parse(result.error);
+            const err = new Error();
+            Object.assign(err, rpcError);
+            throw err;
         }
         return result;
     }

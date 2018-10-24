@@ -1,13 +1,10 @@
-const assert = require('assert');
-
 class CommandResult {
     /**
      * @constructor
      * @param {any} data - data to be sent
      */
     constructor(data) {
-        assert.ok(data, 'Data required');
-        this.data = data;
+        this.data = data || '';
     }
 
     /**

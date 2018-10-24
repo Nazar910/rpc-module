@@ -1,16 +1,11 @@
 const CommandResult = require('../../src/command-result');
 const { expect } = require('chai');
-describe('Command', () => {
+describe('CommandResult', () => {
     describe('create', () => {
         describe('data', () => {
             it('should create CommandResult instance', () => {
                 const cmdRes = CommandResult.create({foo: 'bar'});
                 expect(cmdRes.data).to.eql({foo: 'bar'});
-            });
-            describe('is not specified', () => {
-                it('should throw error', () => {
-                    expect(CommandResult.create.bind(CommandResult)).to.throw(Error, 'Data required');
-                });
             });
         });
     });

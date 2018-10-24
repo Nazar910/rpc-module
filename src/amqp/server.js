@@ -26,8 +26,8 @@ class AMQPRPCServer extends AMQPDriver {
                 result = await job(...cmd.args);
                 ch.ack(msg);
             } catch (e) {
-                console.error(e.message);
-                result = { error: e.message };
+                console.error(e);
+                result = { error: JSON.stringify(e, Object.getOwnPropertyNames(e)) };
                 ch.reject(msg, false);
             }
             const replyCmd = CommandResult.create(result);
