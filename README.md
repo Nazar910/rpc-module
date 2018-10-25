@@ -50,7 +50,7 @@ About to init connection
 1. rpcModule.getDriver(driverName: string)
 Returns apropriate drivers (Server and Client) for specified driverName.
 ```javascript
-const rpcModule = require('nazar@910/rpc-module');
+const rpcModule = require('@nazar910/rpc-module');
 const { AMQPRPCServer, AMQPRPCClient } = rpcModule.getDriver('amqp');
 ```
 2. Drivers API
@@ -62,7 +62,7 @@ const { AMQPRPCServer, AMQPRPCClient } = rpcModule.getDriver('amqp');
 AMQPRPCServer and AMQPRPCClient have `create` factory method for getting instance of driver (`rpcServer` or `rpcClient`).
 Example:
 ```javascript
-const rpcModule = require('nazar@910/rpc-module');
+const rpcModule = require('@nazar910/rpc-module');
 const { AMQPRPCServer, AMQPRPCClient } = rpcModule.getDriver('amqp');
 const RABBITMQ_URI = 'amqp://localhost:5672';
 const rpcServer = AMQPRPCServer.create(RABBITMQ_URI);
