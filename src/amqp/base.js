@@ -27,13 +27,10 @@ class AMQPDriver {
         let conn = this.connection;
         while (!conn) {
             try {
-                console.log('About to init connection');
                 conn = await amqp.connect(this._amqpUri);
                 this._connection = conn;
             } catch (_) {
-                console.error('Failed to connect to amqp');
                 await new Promise(resolve => setTimeout(resolve, AMQPDriver.RECONNECT_TIMEOUT));
-                console.error('Attempting to reconnect');
             }
         }
         return conn;
@@ -57,7 +54,6 @@ class AMQPDriver {
         if (this.channel) {
             return;
         }
-        console.log('About to create channel');
         const conn = await this._getConnection();
         const ch = await conn.createChannel();
         this._channel = ch;
