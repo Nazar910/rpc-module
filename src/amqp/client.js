@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
 const assert = require('assert');
-const uuid = require('node-uuid');
+const uuid = require('uuid');
 const AMQPDriver = require('./base');
 const Command = require('../command');
 const CommandResult = require('../command-result');

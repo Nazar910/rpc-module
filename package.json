@@ -1,6 +1,6 @@
 {
   "name": "@nazar910/rpc-module",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Module that provides rpc communication",
   "main": "rpc-module",
   "bugs": "https://github.com/Nazar910/rpc-module/issues",
@@ -29,6 +29,6 @@
   },
   "dependencies": {
     "lodash": "^4.17.11",
-    "node-uuid": "^1.4.8"
+    "uuid": "^3.3.2"
   }
 }
