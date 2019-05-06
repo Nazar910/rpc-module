@@ -111,3 +111,15 @@ async function () {
 }
 // ...
 ```
+
+- `rpcClient.sendRaw`
+
+`rpcClient` has `sendRaw(queueName: string, data: object)` method for just sending msg to a queue.
+Example:
+```javascript
+// ...
+async function () {
+    await rpcClient.sendRaw('some-queue', {foo: 'bar'});
+}
+// ...
+```

@@ -176,4 +176,25 @@ describe('AMQP - (RabbitMQ)', () => {
             );
         });
     });
+    describe('sendRaw', () => {
+        let amqpRpc;
+        let sendToQueueSpy;
+        beforeEach(() => {
+            sendToQueueSpy = sandbox.spy();
+            const channelObj = {
+                sendToQueue: sendToQueueSpy
+            }
+            amqpRpc = AMQPRPCClient.create(RABBITMQ_URI);
+            sandbox.stub(amqpRpc, 'channel')
+                .get(() => channelObj);
+        });
+        it('should call sendToQueue', async () => {
+            await amqpRpc.sendRaw('queue123', { foo: 'bar' });
+            expect(sendToQueueSpy.callCount).to.be.equal(1);
+            expect(sendToQueueSpy.firstCall.args).to.have.lengthOf(2);
+            expect(sendToQueueSpy.firstCall.args[0]).to.be.equal('queue123');
+            expect(sendToQueueSpy.firstCall.args[1])
+                .to.eql(Buffer.from(JSON.stringify({ foo: 'bar' })));
+        });
+    });
 });
