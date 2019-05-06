@@ -86,6 +86,11 @@ class AMQPRPCClient extends AMQPDriver {
         return 20 * 1000;
     }
 
+    /**
+     * Sends data to queue
+     * @param {String} queueName - queue name
+     * @param {Object} data - data to send
+     */
     async sendRaw(queueName, data = {}) {
         await super.start();
         assert.ok(queueName, 'Queue name is required');
