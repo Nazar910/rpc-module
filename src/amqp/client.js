@@ -85,6 +85,14 @@ class AMQPRPCClient extends AMQPDriver {
     static get REPLY_MESSAGE_TTL() {
         return 20 * 1000;
     }
+
+    async sendRaw(queueName, data = {}) {
+        await super.start();
+        assert.ok(queueName, 'Queue name is required');
+        const ch = this.channel;
+        const body = Buffer.from(JSON.stringify(data));
+        ch.sendToQueue(queueName, body);
+    }
 }
 
 module.exports = AMQPRPCClient;

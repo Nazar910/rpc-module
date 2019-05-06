@@ -5,6 +5,7 @@ const { expect } = chai;
 const rpcModule = require('../../src');
 const { AMQPRPCServer, AMQPRPCClient  } = rpcModule.getDriver('amqp');
 const RABBITMQ_URI = 'amqp://localhost:5672';
+const amqp = require('amqplib');
 describe('AMQP rpc', () => {
     let rpcClient;
     let rpcServer;
@@ -45,5 +46,29 @@ describe('AMQP rpc', () => {
                 rpcClient.call('job-with-error')
             ).to.be.rejectedWith(Error, 'Some error')
         );
+    });
+
+    describe('sendRaw', () => {
+        const queue = 'some-queue';
+        const data = {
+            foo: 'bar'
+        };
+        let ch;
+        beforeEach(async () => {
+            const conn = await amqp.connect(RABBITMQ_URI);
+            ch = await conn.createChannel();
+            await ch.assertQueue(queue);
+            await ch.purgeQueue(queue);
+        });
+        it('should send raw data to queue', (done) => {
+            ch.consume(queue, (msg) => {
+                const body = JSON.parse(msg.content.toString());
+                expect(body).to.eql(data);
+                done();
+            });
+
+            rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
+            rpcClient.sendRaw(queue, data);
+        });
     });
 });
