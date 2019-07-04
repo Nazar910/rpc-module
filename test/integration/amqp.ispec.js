@@ -18,14 +18,14 @@ describe('AMQP rpc', () => {
                 [key]: 'baz'
             }
         });
+        rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
+        await rpcClient.start();
     });
     afterEach(async () => {
         await rpcClient.close();
         await rpcServer.close();
     });
     it('should send rpc and get response', async () => {
-        rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
-        await rpcClient.start();
         const actual = await rpcClient.call('foo', 'bar');
         expect(actual).to.eql({
             bar: 'baz'
@@ -34,13 +34,9 @@ describe('AMQP rpc', () => {
 
     describe('job throwed error', () => {
         beforeEach(async () => {
-            rpcServer = AMQPRPCServer.create(RABBITMQ_URI);
-            await rpcServer.start();
-
             rpcServer.addHandler('job-with-error', () => {
                 throw new Error('Some error');
             });
-            rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
         });
         it('rpc.call should throw error', () => expect(
                 rpcClient.call('job-with-error')
@@ -68,6 +64,20 @@ describe('AMQP rpc', () => {
             });
 
             rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
+            rpcClient.sendRaw(queue, data);
+        });
+    });
+
+    describe('addNoReplyHandler', () => {
+        const queue = 'add-no-reply-handler-some-queue';
+        const data = {
+            foo: 'bar'
+        };
+        it('should consume raw data from queue', (done) => {
+            rpcServer.addNoReplyHandler(queue, (arg) => {
+                expect(arg).to.eql(data);
+                done();
+            });
             rpcClient.sendRaw(queue, data);
         });
     });

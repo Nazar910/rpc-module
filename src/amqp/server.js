@@ -35,6 +35,32 @@ class AMQPRPCServer extends AMQPDriver {
             });
         });
     }
+
+    /**
+     * Add command with no reply handler
+     * so it does not publish msg to reply queue
+     * @param {String} command - command name
+     * @param {Function|AsyncFunction} job - job to be executed on command
+     */
+    async addNoReplyHandler(command, job) {
+        assert.ok(command, 'Command is required');
+        assert.ok(_.isString(command), 'Command should be string');
+        assert.ok(job, 'Job is required');
+        assert.ok(_.isFunction(job), 'Job should be a function');
+        const ch = this.channel;
+        assert.ok(ch, 'No channel, you should call start() before');
+        await ch.assertQueue(command);
+        ch.consume(command, async (msg) => {
+            const data = JSON.parse(msg.content.toString());
+            try {
+                await job(data);
+                ch.ack(msg);
+            } catch (e) {
+                ch.reject(msg);
+            }
+        });
+
+    }
 }
 
 module.exports = AMQPRPCServer;
