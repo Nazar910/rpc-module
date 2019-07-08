@@ -178,8 +178,9 @@ describe('AMQP - (RabbitMQ)', () => {
                     await func(msg);
                     expect(rejectStub.called).to.be.true;
                     expect(rejectStub.callCount).to.be.equal(1);
-                    expect(rejectStub.firstCall.args).to.have.lengthOf(1);
+                    expect(rejectStub.firstCall.args).to.have.lengthOf(2);
                     expect(rejectStub.firstCall.args[0]).to.eql(msg);
+                    expect(rejectStub.firstCall.args[1]).to.equal(false);
                 });
             });
             describe('command', () => {

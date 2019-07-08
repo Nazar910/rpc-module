@@ -56,7 +56,7 @@ class AMQPRPCServer extends AMQPDriver {
                 await job(data);
                 ch.ack(msg);
             } catch (e) {
-                ch.reject(msg);
+                ch.reject(msg, false);
             }
         });
     }
