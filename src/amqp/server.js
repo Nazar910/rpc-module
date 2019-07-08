@@ -59,7 +59,6 @@ class AMQPRPCServer extends AMQPDriver {
                 ch.reject(msg);
             }
         });
-
     }
 }
 

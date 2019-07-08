@@ -60,6 +60,7 @@ describe('AMQP rpc', () => {
             ch.consume(queue, (msg) => {
                 const body = JSON.parse(msg.content.toString());
                 expect(body).to.eql(data);
+                ch.ack(msg);
                 done();
             });
 
@@ -77,8 +78,7 @@ describe('AMQP rpc', () => {
             rpcServer.addNoReplyHandler(queue, (arg) => {
                 expect(arg).to.eql(data);
                 done();
-            });
-            rpcClient.sendRaw(queue, data);
+            }).then(() => rpcClient.sendRaw(queue, data));
         });
     });
 });
