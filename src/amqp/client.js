@@ -22,10 +22,12 @@ class AMQPRPCClient extends AMQPDriver {
      * @param {Object} msg - message from AMQP
      */
     _onMessage(msg) {
+        console.log('Got message', msg);
         const ch = this.channel;
         const correlationIds = this.correlationIds;
         const msgId = msg.properties.correlationId;
         if (correlationIds.has(msgId)) {
+            console.log('About to ack');
             ch.ack(msg);
             correlationIds.delete(msgId);
             this.emitter.emit(
@@ -34,6 +36,7 @@ class AMQPRPCClient extends AMQPDriver {
             );
             return;
         }
+        console.log('About to reject');
         ch.reject(msg);
     }
     /**
@@ -45,7 +48,7 @@ class AMQPRPCClient extends AMQPDriver {
     _waitForReply(replyTo, correlationId) {
         const ch = this.channel;
         return new Promise(resolve => {
-            this.emitter.on(`reply-${correlationId}`, resolve);
+            this.emitter.once(`reply-${correlationId}`, resolve);
             ch.consume(replyTo, this._onMessage.bind(this));
         });
     }

@@ -22,7 +22,9 @@ describe('AMQP rpc', () => {
         await rpcClient.start();
     });
     afterEach(async () => {
+        console.log('About to close rpcClient');
         await rpcClient.close();
+        console.log('About to close rpcServer');
         await rpcServer.close();
     });
     it('should send rpc and get response', async () => {
@@ -42,6 +44,12 @@ describe('AMQP rpc', () => {
                 rpcClient.call('job-with-error')
             ).to.be.rejectedWith(Error, 'Some error')
         );
+    });
+
+    describe.only('simultaneously 15 rpcClient.call', () => {
+        it('should pass', () => Promise.all(
+            new Array(15).fill('').map(() => rpcClient.call('foo', 'bar'))
+        ));
     });
 
     describe('sendRaw', () => {
