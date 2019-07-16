@@ -28,7 +28,7 @@
     "sinon": "^6.3.4"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.14",
     "uuid": "^3.3.2"
   }
 }
