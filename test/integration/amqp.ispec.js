@@ -46,7 +46,7 @@ describe('AMQP rpc', () => {
         );
     });
 
-    describe.only('simultaneously 15 rpcClient.call', () => {
+    describe('simultaneously 15 rpcClient.call', () => {
         it('should pass', () => Promise.all(
             new Array(15).fill('').map(() => rpcClient.call('foo', 'bar'))
         ));

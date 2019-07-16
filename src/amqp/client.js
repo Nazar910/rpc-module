@@ -34,10 +34,7 @@ class AMQPRPCClient extends AMQPDriver {
                 `reply-${msgId}`,
                 CommandResult.fromBuffer(msg.content).data
             );
-            return;
         }
-        console.log('About to reject');
-        ch.reject(msg);
     }
     /**
      * Wait for reply from rpcServer
@@ -59,17 +56,27 @@ class AMQPRPCClient extends AMQPDriver {
      * @returns {any} result
      */
     async call(command, ...args) {
-        await super.start();
         assert.ok(command, 'Command is required');
-        const ch = this.channel;
+        const conn = await this._getConnection();
+        const ch = await conn.createChannel();
         const replyTo = `reply-${command}`;
         const replyOpts = {
             messageTtl: AMQPRPCClient.REPLY_MESSAGE_TTL
         };
         await ch.assertQueue(replyTo, replyOpts);
         const correlationId = uuid.v4();
-        this.correlationIds.add(correlationId);
-        const promise = this._waitForReply(replyTo, correlationId);
+        const promise = new Promise(resolve => {
+            ch.consume(replyTo, (msg) => {
+                if (msg.properties.correlationId === correlationId) {
+                    ch.ack(msg);
+                    resolve(CommandResult.fromBuffer(msg.content).data);
+                } else {
+                    ch.reject(msg);
+                }
+            });
+        });
+        // this.correlationIds.add(correlationId);
+        // const promise = this._waitForReply(replyTo, correlationId);
         const cmd = Command.create(command, args);
         ch.sendToQueue(command, cmd.pack(), {
             correlationId,
@@ -82,6 +89,7 @@ class AMQPRPCClient extends AMQPDriver {
             Object.assign(err, rpcError);
             throw err;
         }
+        await ch.close();
         return result;
     }
 
