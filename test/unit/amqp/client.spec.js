@@ -23,23 +23,25 @@ describe('AMQP - (RabbitMQ)', () => {
             let assertQueueStub;
             let sendToQueueSpy;
             let consumeSpy;
-            let closeSpy;
+            let closeStub;
             let _waitForMsgWithCorrelationIdStub;
             let channelObj;
+            let createChannelStub;
             beforeEach(() => {
                 assertQueueStub = sandbox.stub().resolves({ queue: 'generated-name' });
                 sendToQueueSpy = sandbox.spy();
                 consumeSpy = sandbox.spy();
-                closeSpy = sandbox.spy();
+                closeStub = sandbox.stub().resolves();
                 channelObj = {
                     assertQueue: assertQueueStub,
                     sendToQueue: sendToQueueSpy,
                     consume: consumeSpy,
-                    close: closeSpy
+                    close: closeStub
                 }
                 amqpRpc = AMQPRPCClient.create(RABBITMQ_URI);
+                createChannelStub = sandbox.stub().resolves(channelObj);
                 sandbox.stub(amqpRpc, '_getConnection')
-                    .resolves({ createChannel: () => Promise.resolve(channelObj) });
+                    .resolves({ createChannel: createChannelStub });
                 _waitForMsgWithCorrelationIdStub = sandbox.stub(amqpRpc, '_waitForMsgWithCorrelationId')
                     .resolves({});
             });
@@ -52,6 +54,16 @@ describe('AMQP - (RabbitMQ)', () => {
                         exclusive: true
                     }
                 ]);
+            });
+            it('should call createChannel', async () => {
+                await amqpRpc.call('command');
+                expect(createChannelStub.callCount).to.be.equal(1);
+                expect(createChannelStub.firstCall.args).to.have.lengthOf(0);
+            });
+            it('should call channel.close', async () => {
+                await amqpRpc.call('command');
+                expect(closeStub.callCount).to.be.equal(1);
+                expect(closeStub.firstCall.args).to.have.lengthOf(0);
             });
             it('should call _waitForMsgWithCorrelationIdStub', async () => {
                 await amqpRpc.call('command');
