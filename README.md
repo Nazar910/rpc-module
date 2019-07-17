@@ -37,14 +37,6 @@ async function main() {
 main();
 
 ```
-And you'll see:
-```bash
-About to create channel
-About to init connection
-About to create channel
-About to init connection
-"doing something" is very important
-```
 
 ### API
 1. rpcModule.getDriver(driverName: string)

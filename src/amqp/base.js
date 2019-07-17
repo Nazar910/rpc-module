@@ -21,18 +21,30 @@ class AMQPDriver {
     }
 
     /**
-     * Ensures this.connection
+     * Creates new connection
      */
-    async _getConnection() {
-        let conn = this.connection;
+    async _createConnection() {
+        let conn = null;
         while (!conn) {
             try {
                 conn = await amqp.connect(this._amqpUri);
-                this._connection = conn;
+                return conn;
             } catch (_) {
                 await new Promise(resolve => setTimeout(resolve, AMQPDriver.RECONNECT_TIMEOUT));
             }
         }
+        return conn;
+    }
+
+    /**
+     * Ensures this.connection
+     */
+    async _getConnection() {
+        if (this.connection) {
+            return this.connection;
+        }
+        const conn = await this._createConnection();
+        this._connection = conn;
         return conn;
     }
 

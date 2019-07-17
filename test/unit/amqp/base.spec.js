@@ -31,7 +31,7 @@ describe('AMQP - (RabbitMQ)', () => {
                     ).to.throw(Error, 'amqpUri should be string'));
                 });
             });
-            describe('_getConnection', () => {
+            describe('_createConnection', () => {
                 let expectedConnection;
                 let connectStub;
 
@@ -44,22 +44,42 @@ describe('AMQP - (RabbitMQ)', () => {
                 });
                 it('should pass', async () => {
                     const amqpRpc = driverImpl.create(RABBITMQ_URI);
-                    await amqpRpc._getConnection();
+                    await amqpRpc._createConnection();
                 });
                 it('should return amqp connection', async () => {
                     const amqpRpc = driverImpl.create(RABBITMQ_URI);
-                    const conn = await amqpRpc._getConnection();
+                    const conn = await amqpRpc._createConnection();
                     expect(connectStub.callCount).to.be.equal(1);
                     expect(connectStub.firstCall.args).to.have.lengthOf(1);
                     expect(connectStub.firstCall.args[0]).to.be.equal(RABBITMQ_URI);
                     expect(conn).to.be.equal(expectedConnection);
                 });
+            });
+            describe('_getConnection', () => {
+                let expectedConnection;
+                let amqpRpc;
+                let createConnectionStub;
+
+                beforeEach(() => {
+                    expectedConnection = {
+                        createChannel: () => ({})
+                    };
+                    amqpRpc = driverImpl.create(RABBITMQ_URI);
+                    createConnectionStub = sandbox
+                        .stub(amqpRpc, '_createConnection')
+                        .resolves(expectedConnection);
+                });
+                it('should return amqp connection', async () => {
+                    const conn = await amqpRpc._getConnection();
+                    expect(createConnectionStub.callCount).to.be.equal(1);
+                    expect(createConnectionStub.firstCall.args).to.have.lengthOf(0);
+                    expect(conn).to.be.equal(expectedConnection);
+                });
                 describe('connection is already present', () => {
-                    it('should not call amqp.connect and just return connection', async () => {
-                        const amqpRpc = driverImpl.create(RABBITMQ_URI);
+                    it('should not call _createConnection and just return connection', async () => {
                         await amqpRpc._getConnection();
                         const conn = await amqpRpc._getConnection();
-                        expect(connectStub.callCount).to.be.equal(1);
+                        expect(createConnectionStub.callCount).to.be.equal(1);
                         expect(conn).to.be.equal(expectedConnection);
                     });
                 });

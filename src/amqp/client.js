@@ -1,4 +1,3 @@
-const EventEmitter = require('events');
 const assert = require('assert');
 const uuid = require('uuid');
 const AMQPDriver = require('./base');
@@ -8,45 +7,24 @@ const CommandResult = require('../command-result');
 class AMQPRPCClient extends AMQPDriver {
     constructor(...args) {
         super(...args);
-        this._correlationIds = new Set();
-        this._emitter = new EventEmitter();
-    }
-    get emitter() {
-        return this._emitter;
-    }
-    get correlationIds() {
-        return this._correlationIds;
     }
     /**
-     * Handler for AMQP message
-     * @param {Object} msg - message from AMQP
+     * Waits for msg with correlation id
+     * @param {object} channel - amqplib channel obj
+     * @param {string} queueName - queue name
+     * @param {number} correlationId - id of msg to expect
+     * @returns {Promise} that resolves with msg
      */
-    _onMessage(msg) {
-        const ch = this.channel;
-        const correlationIds = this.correlationIds;
-        const msgId = msg.properties.correlationId;
-        if (correlationIds.has(msgId)) {
-            ch.ack(msg);
-            correlationIds.delete(msgId);
-            this.emitter.emit(
-                `reply-${msgId}`,
-                CommandResult.fromBuffer(msg.content).data
-            );
-            return;
-        }
-        ch.reject(msg);
-    }
-    /**
-     * Wait for reply from rpcServer
-     * @param {String} replyTo - queue where to wait for reply
-     * @param {String} correlationId - id of request
-     * @returns {Promise} that resolves when got answer from server
-     */
-    _waitForReply(replyTo, correlationId) {
-        const ch = this.channel;
+    _waitForMsgWithCorrelationId (channel, queueName, correlationId) {
         return new Promise(resolve => {
-            this.emitter.on(`reply-${correlationId}`, resolve);
-            ch.consume(replyTo, this._onMessage.bind(this));
+            channel.consume(queueName, (msg) => {
+                if (msg.properties.correlationId === correlationId) {
+                    channel.ack(msg);
+                    resolve(CommandResult.fromBuffer(msg.content).data);
+                } else {
+                    channel.reject(msg);
+                }
+            });
         });
     }
     /**
@@ -56,17 +34,13 @@ class AMQPRPCClient extends AMQPDriver {
      * @returns {any} result
      */
     async call(command, ...args) {
-        await super.start();
         assert.ok(command, 'Command is required');
-        const ch = this.channel;
-        const replyTo = `reply-${command}`;
-        const replyOpts = {
-            messageTtl: AMQPRPCClient.REPLY_MESSAGE_TTL
-        };
-        await ch.assertQueue(replyTo, replyOpts);
+        const conn = await this._getConnection();
+        const ch = await conn.createChannel();
+        const q = await ch.assertQueue('', { exclusive: true });
+        const replyTo = q.queue;
         const correlationId = uuid.v4();
-        this.correlationIds.add(correlationId);
-        const promise = this._waitForReply(replyTo, correlationId);
+        const promise = this._waitForMsgWithCorrelationId(ch, replyTo, correlationId);
         const cmd = Command.create(command, args);
         ch.sendToQueue(command, cmd.pack(), {
             correlationId,
@@ -79,6 +53,7 @@ class AMQPRPCClient extends AMQPDriver {
             Object.assign(err, rpcError);
             throw err;
         }
+        await ch.close();
         return result;
     }
 

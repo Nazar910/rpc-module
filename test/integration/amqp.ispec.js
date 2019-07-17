@@ -13,11 +13,9 @@ describe('AMQP rpc', () => {
         rpcServer = AMQPRPCServer.create(RABBITMQ_URI);
         await rpcServer.start();
 
-        rpcServer.addHandler('foo', (key) => {
-            return {
+        rpcServer.addHandler('foo', (key) => ({
                 [key]: 'baz'
-            }
-        });
+        }));
         rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
         await rpcClient.start();
     });
@@ -41,6 +39,17 @@ describe('AMQP rpc', () => {
         it('rpc.call should throw error', () => expect(
                 rpcClient.call('job-with-error')
             ).to.be.rejectedWith(Error, 'Some error')
+        );
+    });
+
+    describe('simultaneously 15 rpcClient.call', () => {
+        it('should pass', () => Promise.all(
+            new Array(15).fill().map(async (e, i) => {
+                const result = await rpcClient.call('foo', i);
+                expect(result).to.eql({
+                    [i]: 'baz'
+                });
+            }))
         );
     });
 
