@@ -1,23 +1,11 @@
 const amqp = require('amqplib');
 const assert = require('assert');
 const _ = require('lodash');
-const { EventEmitter } = require('events');
 class AMQPDriver {
-    static get states() {
-        const states = {
-            IDLE: 'IDLE',
-            STARTING: 'STARTING',
-            ACTIVE: 'ACTIVE'
-        }
-        return states;
-    }
-
     constructor(amqpUri) {
         assert.ok(amqpUri, 'amqpUri is required!');
         assert.ok(_.isString(amqpUri), 'amqpUri should be string');
         this._amqpUri = amqpUri;
-        this.state = AMQPDriver.states.IDLE;
-        this.stateEmitter = new EventEmitter();
     }
 
     get connection() {
@@ -78,14 +66,9 @@ class AMQPDriver {
         if (this.channel) {
             return;
         }
-        this.state = AMQPDriver.states.STARTING;
-        console.log('Set status to STARTING');
         const conn = await this._getConnection();
         const ch = await conn.createChannel();
         this._channel = ch;
-        this.state = AMQPDriver.states.ACTIVE;
-        console.log('Set status to ACTIVE');
-        this.stateEmitter.emit(AMQPDriver.states.ACTIVE);
     }
 
     /**
@@ -103,14 +86,6 @@ class AMQPDriver {
      * Initializes connection and channel
      */
     async start() {
-        //if is starting
-        // console.log('About to start');
-        // console.log('State', this.state);
-        // if (this.state === AMQPDriver.states.STARTING) {
-        //     await new Promise(resolve =>
-        //         this.stateEmitter.once(AMQPDriver.states.ACTIVE, resolve)
-        //     );
-        // }
         await this._initChannel();
     }
 

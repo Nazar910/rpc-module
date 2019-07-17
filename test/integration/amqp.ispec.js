@@ -13,18 +13,14 @@ describe('AMQP rpc', () => {
         rpcServer = AMQPRPCServer.create(RABBITMQ_URI);
         await rpcServer.start();
 
-        rpcServer.addHandler('foo', (key) => {
-            return {
+        rpcServer.addHandler('foo', (key) => ({
                 [key]: 'baz'
-            }
-        });
+        }));
         rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
         await rpcClient.start();
     });
     afterEach(async () => {
-        console.log('About to close rpcClient');
         await rpcClient.close();
-        console.log('About to close rpcServer');
         await rpcServer.close();
     });
     it('should send rpc and get response', async () => {
@@ -48,8 +44,13 @@ describe('AMQP rpc', () => {
 
     describe('simultaneously 15 rpcClient.call', () => {
         it('should pass', () => Promise.all(
-            new Array(15).fill('').map(() => rpcClient.call('foo', 'bar'))
-        ));
+            new Array(15).fill().map(async (e, i) => {
+                const result = await rpcClient.call('foo', i);
+                expect(result).to.eql({
+                    [i]: 'baz'
+                });
+            }))
+        );
     });
 
     describe('sendRaw', () => {
