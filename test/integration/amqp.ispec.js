@@ -59,21 +59,25 @@ describe('AMQP rpc', () => {
             foo: 'bar'
         };
         let ch;
+        let conn;
         beforeEach(async () => {
-            const conn = await amqp.connect(RABBITMQ_URI);
+            conn = await amqp.connect(RABBITMQ_URI);
             ch = await conn.createChannel();
             await ch.assertQueue(queue);
             await ch.purgeQueue(queue);
         });
+        afterEach(async () => {
+            await conn.close();
+        });
         it('should send raw data to queue', (done) => {
-            ch.consume(queue, (msg) => {
+            ch.consume(queue, async (msg) => {
                 const body = JSON.parse(msg.content.toString());
                 expect(body).to.eql(data);
                 ch.ack(msg);
+                await ch.close();
                 done();
             });
 
-            rpcClient = AMQPRPCClient.create(RABBITMQ_URI);
             rpcClient.sendRaw(queue, data);
         });
     });

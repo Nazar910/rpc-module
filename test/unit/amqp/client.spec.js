@@ -74,8 +74,7 @@ describe('AMQP - (RabbitMQ)', () => {
             });
             describe('_waitForMsgWithCorrelationId rejects', () => {
                 it('should reject', () => {
-                    amqpRpc = AMQPRPCClient.create(RABBITMQ_URI);
-                    sandbox.stub(amqpRpc, '_waitForMsgWithCorrelationId').rejects();
+                    _waitForMsgWithCorrelationIdStub.rejects();
                     expect(amqpRpc.call('command')).to.be.rejected;
                 });
             });

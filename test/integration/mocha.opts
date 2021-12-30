@@ -1,3 +1,0 @@
-./test/integration/**.ispec.js
---recursive
---exit
