@@ -1,4 +1,4 @@
-# rpc-module [![Build Status](https://travis-ci.com/Nazar910/rpc-module.svg?branch=master)](https://travis-ci.com/Nazar910/rpc-module)
+# rpc-module ![example workflow](https://github.com/Nazar910/rpc-module/actions/workflows/node.js.yml/badge.svg)
 *Module that provide you with a possibility to communicate with other modules of your system via rpc*
 
 ## Getting started
