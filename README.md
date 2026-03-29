@@ -1,3 +1,5 @@
+DEPRECATED
+
 # rpc-module ![example workflow](https://github.com/Nazar910/rpc-module/actions/workflows/node.js.yml/badge.svg)
 *Module that provide you with a possibility to communicate with other modules of your system via rpc*
 
